@@ -1,0 +1,19 @@
+{
+  "name": "taxservice",
+  "version": "1.0.0",
+  "description": "Tax Service",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "MYOB",
+  "license": "MIT",
+  "dependencies": {
+    "chai": "^4.2.0",
+    "express": "^4.14.0",
+    "mocha": "^6.2.2"
+  },
+  "devDependencies": {
+    "test": ">=0.0.5"
+  }
+}

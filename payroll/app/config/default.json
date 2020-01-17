@@ -1,0 +1,4 @@
+{
+  "taxHost": "http://tax:3001",
+  "paymentsHost": "http://payments:3002"
+}

@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: myob shiny people demo app
+Parameters:
+  VpcId:
+    Type: String
+    Description: The ID for the VPC
+  Subnets:
+    Type: CommaDelimitedList
+    Description: The subnets for the VPC
+Resources:
+  DNSZone:
+    Type: "AWS::Route53::HostedZone"
+    Properties:
+      HostedZoneConfig:
+        Comment: "hosted zone for shiny.myob.com"
+      Name: "shiny.myob.com"
+  DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId:
+        Ref: DNSZone
+      Name: shiny.myob.com.
+      Type: A
+      AliasTarget:
+        DNSName:
+          Fn::GetAtt:
+            - ELB
+            - DNSName
+        HostedZoneId:
+          Fn::GetAtt:
+            - ELB
+            - CanonicalHostedZoneNameID
+
+  ELB:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      Subnets:
+        Ref: Subnets
+      Scheme: internet-facing
+      CrossZone: "true"
+      HealthCheck:
+        HealthyThreshold: "3"
+        Interval: "30"
+        Target: HTTP:80/
+        Timeout: "5"
+        UnhealthyThreshold: "5"
+      Listeners:
+        - InstancePort: "80"
+          LoadBalancerPort: "80"
+          Protocol: HTTP
+      SecurityGroups:
+        - Ref: ELBSecurityGroup
+  ELBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP from the load balancer only
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+        - FromPort: "80"
+          ToPort: "80"
+          IpProtocol: tcp
+          CidrIp: "0.0.0.0/0"
+
+Outputs:
+  ELB:
+    Description: The ELB
+    Value:
+      Ref: ELB
+  ELBSecurityGroup:
+    Description: The ELB Security Group
+    Value:
+      Ref: ELBSecurityGroup
+  URL:
+    Description: The URL of the website
+    Value:
+      Fn::Join:
+      - ""
+      - - http://
+        - Fn::GetAtt:
+          - ELB
+          - DNSName

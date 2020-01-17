@@ -1,0 +1,29 @@
+version: "3"
+services:
+  nginx:
+    image: "a624d888d69f"
+    ports:
+        - "8080:80"
+    links:
+      - "payroll:app"
+  payroll:
+    image: "51e51f195520"
+    environment:
+      - NODE_ENV=development
+    expose:
+        - "3000"
+    links:
+     - tax
+     - payments
+  tax:
+    image: "575f78b95ddc"
+    environment:
+      - NODE_ENV=development
+    expose:
+        - "3001"
+  payments:
+    image: "6f7f4949f1c9"
+    environment:
+      - NODE_ENV=development
+    expose:
+        - "3002"

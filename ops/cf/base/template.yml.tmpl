@@ -1,0 +1,63 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: supporing infrastructure for shiny people app
+Parameters:
+  Root:
+    Type: String
+    Default: "shiny-people"
+    Description: "the name of the root ECR"
+Resources:
+{{- range $_, $e := .images }}
+  {{ $e }}Repo:
+    Type: "AWS::ECR::Repository"
+    Properties:
+      RepositoryName:
+        Fn::Join:
+          - "/"
+          - - Ref: Root
+            - {{ $e }}
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Sid: allow-ecr-read-access
+            Effect: Allow
+            Principal:
+              AWS:
+                - "arn:aws:iam::552047359587:root"
+            Action:
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:BatchGetImage"
+              - "ecr:BatchCheckLayerAvailability"
+{{- end }}
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: "${AWS::StackName}-${AWS::AccountId}-${AWS::Region}"
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldDeployments
+            Status: Enabled
+            ExpirationInDays: '7'
+
+Outputs:
+  DeploymentBucket:
+    Description: S3 bucket for deployment files
+    Value:
+      Ref: Bucket
+  RootECR:
+    Description: The Base ECR URI
+    Value:
+      Fn::Join:
+        - "."
+        - - Ref: "AWS::AccountId"
+          - "dkr.ecr"
+          - Ref: "AWS::Region"
+          - Fn::Join:
+            - "/"
+            - - "amazonaws.com"
+              - Ref: Root

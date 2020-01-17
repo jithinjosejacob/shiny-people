@@ -1,0 +1,4 @@
+- ParameterKey: VpcId
+  ParameterValue: ""
+- ParameterKey: Subnets
+  ParameterValue: ""

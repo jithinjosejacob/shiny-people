@@ -1,0 +1,26 @@
+{
+  "name": "hrpayrollsystem",
+  "version": "1.0.0",
+  "description": "Sample HR Payroll System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "start-test": "cross-env NODE_ENV=test node server.js",
+    "test": "node ./node_modules/selenium-cucumber-js/index.js -s ./test/step_definitions -f ./test/features -r ./test/reports -p ./test/page_objects -x 50000"
+  },
+  "author": "MYOB",
+  "license": "MIT",
+  "dependencies": {
+    "config": "^1.30.0",
+    "ejs": "^2.5.5",
+    "express": "^4.14.0",
+    "http-proxy-middleware": "^0.18.0",
+    "sinon-chai": "^3.4.0"
+  },
+  "devDependencies": {
+    "chai": "^4.1.1",
+    "cross-env": "^5.2.0",
+    "expect": "^24.9.0",
+    "selenium-cucumber-js": "^1.7.0"
+  }
+}

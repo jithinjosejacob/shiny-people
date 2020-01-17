@@ -1,0 +1,14 @@
+- ParameterKey: KeyName
+  ParameterValue: ""
+- ParameterKey: DeploymentBucket
+  ParameterValue: ""
+- ParameterKey: InstanceProfile
+  ParameterValue: ""
+- ParameterKey: VpcId
+  ParameterValue: ""
+- ParameterKey: PrivateSubnets
+  ParameterValue: ""
+- ParameterKey: ELB
+  ParameterValue: ""
+- ParameterKey: ELBSecurityGroup
+  ParameterValue: ""

@@ -1,0 +1,205 @@
+[
+  {
+    "description": "  As an HR User\n  I should be able to hide payslip data which was opened\n  So that I can navigate back to dashboard page again",
+    "elements": [
+      {
+        "id": "hide-payslip;hide-payslip",
+        "keyword": "Scenario",
+        "line": 7,
+        "name": "Hide Payslip",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "name": "I generate a payslip for a new employee",
+            "result": {
+              "status": "passed",
+              "duration": 33535045200
+            },
+            "line": 8,
+            "match": {
+              "location": "CHALLENGE\\shiny-people\\payroll\\app\\test\\step_definitions\\payslip_steps.js:6"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "name": "I press Hide",
+            "result": {
+              "status": "passed",
+              "duration": 1385542500
+            },
+            "line": 9,
+            "match": {
+              "location": "CHALLENGE\\shiny-people\\payroll\\app\\test\\step_definitions\\payslip_steps.js:34"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "name": "I should not see the payslip table",
+            "result": {
+              "status": "passed",
+              "duration": 75872400
+            },
+            "line": 10,
+            "match": {
+              "location": "CHALLENGE\\shiny-people\\payroll\\app\\test\\step_definitions\\payslip_steps.js:55"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "After ",
+            "result": {
+              "status": "passed",
+              "duration": 2507130100
+            },
+            "hidden": true,
+            "match": {
+              "location": "CHALLENGE\\shiny-people\\payroll\\app\\node_modules\\selenium-cucumber-js\\runtime\\world.js:250"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "hide-payslip",
+    "keyword": "Feature",
+    "line": 2,
+    "name": "Hide Payslip",
+    "tags": [],
+    "uri": "C:/Users/ADMIN/Desktop/MYOB-QA CHALLENGE/shiny-people/payroll/app/test/features/hide_payslip.feature"
+  },
+  {
+    "description": "  As an HR User\n  I should be able to generate a new payslip for a new employee\n  So that I can verify that payslip can be generated successfully",
+    "elements": [
+      {
+        "id": "initiate-payment;initiate-payment",
+        "keyword": "Scenario",
+        "line": 7,
+        "name": "Initiate Payment",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "name": "I generate a payslip for a new employee",
+            "result": {
+              "status": "passed",
+              "duration": 25962178800
+            },
+            "line": 8,
+            "match": {
+              "location": "CHALLENGE\\shiny-people\\payroll\\app\\test\\step_definitions\\payslip_steps.js:6"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "name": "I press Pay",
+            "result": {
+              "status": "passed",
+              "duration": 96304700
+            },
+            "line": 9,
+            "match": {
+              "location": "CHALLENGE\\shiny-people\\payroll\\app\\test\\step_definitions\\payslip_steps.js:34"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "name": "I should see payee data added to payment table",
+            "result": {
+              "status": "passed",
+              "duration": 131599900
+            },
+            "line": 10,
+            "match": {
+              "location": "CHALLENGE\\shiny-people\\payroll\\app\\test\\step_definitions\\payslip_steps.js:40"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "After ",
+            "result": {
+              "status": "passed",
+              "duration": 4623160500
+            },
+            "hidden": true,
+            "match": {
+              "location": "CHALLENGE\\shiny-people\\payroll\\app\\node_modules\\selenium-cucumber-js\\runtime\\world.js:250"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "initiate-payment",
+    "keyword": "Feature",
+    "line": 2,
+    "name": "Initiate Payment",
+    "tags": [],
+    "uri": "C:/Users/ADMIN/Desktop/MYOB-QA CHALLENGE/shiny-people/payroll/app/test/features/initiate_payment.feature"
+  },
+  {
+    "description": "  I should be able to generate a new payslip for employees",
+    "elements": [
+      {
+        "id": "payroll-system-payslips;generate-payslip-for-a-new-employee",
+        "keyword": "Scenario",
+        "line": 5,
+        "name": "Generate payslip for a new employee",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "name": "I generate a payslip for a new employee",
+            "result": {
+              "status": "passed",
+              "duration": 22900734600
+            },
+            "line": 6,
+            "match": {
+              "location": "CHALLENGE\\shiny-people\\payroll\\app\\test\\step_definitions\\payslip_steps.js:6"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "name": "I should see the payslip summary page",
+            "result": {
+              "status": "passed",
+              "duration": 482900500
+            },
+            "line": 7,
+            "match": {
+              "location": "CHALLENGE\\shiny-people\\payroll\\app\\test\\step_definitions\\payslip_steps.js:13"
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "After ",
+            "result": {
+              "status": "passed",
+              "duration": 1126430000
+            },
+            "hidden": true,
+            "match": {
+              "location": "CHALLENGE\\shiny-people\\payroll\\app\\node_modules\\selenium-cucumber-js\\runtime\\world.js:250"
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "payroll-system-payslips",
+    "keyword": "Feature",
+    "line": 2,
+    "name": "Payroll System Payslips",
+    "tags": [],
+    "uri": "C:/Users/ADMIN/Desktop/MYOB-QA CHALLENGE/shiny-people/payroll/app/test/features/payslip.feature"
+  }
+]

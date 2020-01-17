@@ -1,0 +1,362 @@
+---
+Description: Shiny base - 1 VPC, 3 subnets, 3 AZs, etc.
+
+Parameters:
+  VpcCIDR:
+    Description: The VPC CIDR (IP/netmask).
+    Type: String
+
+  AvailabilityZones:
+    Description: The AZs in the target region.
+    Type: CommaDelimitedList
+
+  SubnetCIDR:
+    Description: The CIDR for the subnet.
+    Type: CommaDelimitedList
+
+  PrivateSubnetCIDR:
+    Description: The CIDR for the subnet.
+    Type: CommaDelimitedList
+
+  VpcFlowLogRetention:
+    Description: Flow Log retention (number of days).
+    Type: String
+    Default: 14
+
+  VpcFlowLogTrafficType:
+    Description: Flow Log traffic type.
+    Type: String
+    Default: REJECT
+
+  LogForwarderPort:
+    Description: Splunk forwarder port.
+    Type: String
+    Default: 9997
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-vpc"
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-igw"
+
+  FlowLogRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        -
+          Effect: "Allow"
+          Principal:
+            Service:
+              - "vpc-flow-logs.amazonaws.com"
+          Action:
+            - "sts:AssumeRole"
+      Path: "/"
+      RoleName: !Sub "${AWS::StackName}-${AWS::Region}-vpc-flow-log"
+
+  FlowLogPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: "allow_cw_logs"
+      PolicyDocument:
+        Statement:
+        -
+          Effect: "Allow"
+          Action:
+           - "logs:CreateLogGroup"
+           - "logs:CreateLogStream"
+           - "logs:PutLogEvents"
+           - "logs:DescribeLogGroups"
+           - "logs:DescribeLogStreams"
+          Resource: "*"
+      Roles:
+        -
+          !Ref FlowLogRole
+
+  CloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "${AWS::StackName}-${AWS::Region}-log-group"
+      RetentionInDays: !Ref VpcFlowLogRetention
+
+  MainFlowLog:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      DeliverLogsPermissionArn : !GetAtt FlowLogRole.Arn
+      LogGroupName : !Ref CloudWatchLogGroup
+      ResourceId : !Ref VPC
+      ResourceType : VPC
+      TrafficType : ALL
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !Ref AvailabilityZones ]
+      CidrBlock: !Select [ 0, !Ref SubnetCIDR ]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-subnet-1"
+
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !Ref AvailabilityZones ]
+      CidrBlock: !Select [ 1, !Ref SubnetCIDR ]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-subnet-2"
+
+  Subnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 2, !Ref AvailabilityZones ]
+      CidrBlock: !Select [ 2, !Ref SubnetCIDR ]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-subnet-3"
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !Ref AvailabilityZones ]
+      CidrBlock: !Select [ 0, !Ref PrivateSubnetCIDR ]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-private-subnet-1"
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !Ref AvailabilityZones ]
+      CidrBlock: !Select [ 1, !Ref PrivateSubnetCIDR ]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-private-subnet-2"
+
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 2, !Ref AvailabilityZones ]
+      CidrBlock: !Select [ 2, !Ref PrivateSubnetCIDR ]
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-private-subnet-3"
+
+  NetworkAcl:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-network-acl"
+
+  NetworkAclRule199:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      Egress: false
+      NetworkAclId: !Ref NetworkAcl
+      Protocol: -1
+      RuleAction : allow
+      RuleNumber : 199
+
+  NetworkAclRule299:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      CidrBlock: 0.0.0.0/0
+      Egress: true
+      NetworkAclId: !Ref NetworkAcl
+      Protocol: -1
+      RuleAction : allow
+      RuleNumber : 299
+
+  NetworkAclRuleAssociation1:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref Subnet1
+      NetworkAclId: !Ref NetworkAcl
+
+  NetworkAclRuleAssociation2:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref Subnet2
+      NetworkAclId: !Ref NetworkAcl
+
+  NetworkAclRuleAssociation3:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref Subnet3
+      NetworkAclId: !Ref NetworkAcl
+
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Ref Subnet1
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-route"
+
+  Route:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  Subnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet1
+
+  Subnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet2
+
+  Subnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet3
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-private-route"
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet2
+
+  PrivateSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet3
+
+  IAMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+      - Ref: IAMRole
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+              - autoscaling.amazonaws.com
+              - ec2.amazonaws.com
+      ManagedPolicyArns:
+        - Ref: InstancePolicy
+      Path: /
+      RoleName:
+        Fn::Sub: ${AWS::StackName}-Role
+
+  InstancePolicy:
+      Type: "AWS::IAM::ManagedPolicy"
+      Properties:
+        Description: Default policy for EC2 instances
+        Path: "/"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: "Deny"
+            Action:
+              - "iam:*User*"
+              - "iam:*Login*"
+              - "iam:*Group*"
+              - "iam:*Provider*"
+              - "aws-portal:*"
+              - "budgets:*"
+              - "config:*"
+              - "directconnect:*"
+              - "aws-marketplace:*"
+              - "aws-marketplace-management:*"
+              - "ec2:*ReservedInstances*"
+            Resource: "*"
+          - Effect: "Allow"
+            Action: "*"
+            Resource: "*"
+
+Outputs:
+  VpcId:
+    Description: A reference to the created VPC
+    Value: !Ref VPC
+
+  Subnets:
+    Description: A list of the public subnets
+    Value: !Join [ ",", [ !Ref Subnet1, !Ref Subnet2, !Ref Subnet3 ]]
+
+  PrivateSubnets:
+    Description: A list of the private subnets
+    Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3 ]]
+
+  InstanceProfile:
+    Description: The policy to be attached to the instance role
+    Value: !Ref IAMInstanceProfile

@@ -1,0 +1,188 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: myob shiny people demo app
+Parameters:
+  ASGMax:
+    Type: String
+    Default: "3"
+    Description: max size of the ASG
+  AMI:
+    Type: String
+    Default: ami-423bec20
+    Description: AMI ID for Launch Config
+  InstanceType:
+    Type: String
+    Default: t2.small
+    Description: WebServer EC2 instance type
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: The EC2 Key Pair to allow SSH access to the instances
+  DeploymentBucket:
+    Type: String
+    Description: bucket containing a docker-compose.yml
+  InstanceProfile:
+    Type: String
+    Description: The IAM Instace Profile ARN
+  VpcId:
+    Type: String
+    Description: The ID for the VPC
+  PrivateSubnets:
+    Type: CommaDelimitedList
+    Description: The subnets for the VPC
+  ELB:
+    Type: String
+    Description: The ELB to attach to
+  ELBSecurityGroup:
+    Type: String
+    Description: The ELB Security Group
+Resources:
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+      - Ref: ScaleUpPolicy
+      AlarmDescription: Scale-up if CPU > 90% for 10 minutes
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value:
+          Ref: ASG
+      EvaluationPeriods: "2"
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Period: "300"
+      Statistic: Average
+      Threshold: "90"
+  CPUAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+      - Ref: ScaleDownPolicy
+      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      ComparisonOperator: LessThanThreshold
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value:
+          Ref: ASG
+      EvaluationPeriods: "2"
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Period: "300"
+      Statistic: Average
+      Threshold: "70"
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP from the load balancer only
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+        - FromPort: "80"
+          ToPort: "80"
+          IpProtocol: tcp
+          SourceSecurityGroupId:
+            Ref: ELBSecurityGroup
+
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            yum:
+              docker: []
+              curl: []
+          services:
+            sysvinit:
+              docker:
+                enabled: "true"
+                ensureRunning: "true"
+    Properties:
+      IamInstanceProfile:
+        Ref: InstanceProfile
+      ImageId:
+        Ref: AMI
+      InstanceType:
+        Ref: InstanceType
+      KeyName:
+        Ref: KeyName
+      SecurityGroups:
+        - Ref: SecurityGroup
+      AssociatePublicIpAddress: false
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ""
+          - - |
+             #!/bin/bash -xe
+             die() { logger "userdata failed: $*"; exit 1; }
+             yum update -y aws-cfn-bootstrap || die "update cfn bootstrap"
+             
+             
+            - region="
+            - Ref: AWS::Region
+            - |
+             "
+             
+            - stack="
+            - Ref: AWS::StackName
+            - |
+             "
+             
+            - bucket="
+            - Ref: DeploymentBucket
+            - |
+             "
+             
+             logger "region=$region stack=$stack bucket=$bucket"
+             /opt/aws/bin/cfn-init -v --stack "$stack" --resource LaunchConfig --region "$region" || die "cfn-init"
+             
+             curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-$(uname -s)-$(uname -m) \
+             -o /usr/local/bin/docker-compose || die "get docker-compose"
+             chmod +x /usr/local/bin/docker-compose || die "chmod docker-compose"
+             
+             aws s3 cp "s3://$bucket/docker-compose.yml" /root/docker-compose.yml || die "get docker-compose.yml"
+             eval $(aws ecr get-login --no-include-email --region "$region") || die "ecr"
+             cd /root || die "cd /root"
+             /usr/local/bin/docker-compose up -d || die "compose up"
+             
+             /opt/aws/bin/cfn-signal -e "$?" --stack "$stack" --resource ASG --region "$region" || die "cfn-signal"
+
+  ASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        Ref: PrivateSubnets
+      LaunchConfigurationName:
+        Ref: LaunchConfig
+      LoadBalancerNames:
+        - Ref: ELB
+      MaxSize:
+        Ref: ASGMax
+      MinSize: "1"
+    CreationPolicy:
+      ResourceSignal:
+        Count: "1"
+        Timeout: PT15M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: "1"
+        MinInstancesInService: "1"
+        PauseTime: PT15M
+        WaitOnResourceSignals: "true"
+  ScaleDownPolicy:
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName:
+        Ref: ASG
+      Cooldown: "60"
+      ScalingAdjustment: "-1"
+    Type: AWS::AutoScaling::ScalingPolicy
+  ScaleUpPolicy:
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName:
+        Ref: ASG
+      Cooldown: "60"
+      ScalingAdjustment: "1"
+    Type: AWS::AutoScaling::ScalingPolicy
+

@@ -1,0 +1,12 @@
+- ParameterKey: VpcCIDR
+  ParameterValue: 192.168.0.0/16
+- ParameterKey: SubnetCIDR
+  ParameterValue: '192.168.0.0/20,192.168.16.0/20,192.168.32.0/20'
+- ParameterKey: PrivateSubnetCIDR
+  ParameterValue: '192.168.48.0/20,192.168.64.0/20,192.168.80.0/20'
+- ParameterKey: VpcFlowLogRetention
+  ParameterValue: '14'
+- ParameterKey: VpcFlowLogTrafficType
+  ParameterValue: ALL
+- ParameterKey: AvailabilityZones
+  ParameterValue: 'ap-southeast-2a,ap-southeast-2b,ap-southeast-2c'

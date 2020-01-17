@@ -1,0 +1,69 @@
+---
+steps:
+  - label: ':female-detective: lint'
+    command: ops/bin/10-lint.sh
+    agents:
+      queue: general-prod-dflt
+
+  - wait
+
+  - label: ':female-scientist: :docker: test build containers'
+    command:
+      - ops/bin/20-test-build-containers.sh
+      - myob-deploy dev
+    branches: '!master'
+    agents:
+      queue: general-prod-dflt
+
+  - label: ':female-construction-worker: :cloudformation: release base infra (:ecr: :s3:)'
+    command:
+      - ops/bin/30-release-base.sh
+      - myob-deploy prod
+    branches: 'master'
+    agents:
+      queue: general-prod-dflt
+
+  - label: ':female-construction-worker: :cloudformation: release vpc infra (:amazon-vpc: :aws-iam:)'
+    command:
+      - ops/bin/31-release-vpc.sh
+      - myob-deploy prod
+    branches: 'master'
+    agents:
+      queue: general-prod-dflt
+
+  - wait
+
+  - label: ':female-teacher: :clipboard: acquire build metadata'
+    command: ops/bin/32-metadata-set.sh
+    branches: 'master'
+    agents:
+      queue: general-prod-dflt
+
+  - wait
+
+  - label: ':female-mechanic: :docker: :ecr: build and deploy containers'
+    command:
+      - ops/bin/40-build-containers.sh
+      - ops/bin/50-deploy-containers.sh
+    branches: 'master'
+    plugins:
+      ecr#v1.1.4:
+        login: true
+    agents:
+      queue: general-prod-dflt
+
+  - label: ':female-factory-worker: :s3: deploy templated compose file'
+    command: ops/bin/51-deploy-compose.sh
+    branches: 'master'
+    agents:
+      queue: general-prod-dflt
+
+  - wait
+
+  - label: ':female-astronaut: :rocket: release app (:cloudformation: :ec2:)'
+    command:
+      - ops/bin/60-release-app.sh
+      - myob-deploy prod
+    branches: 'master'
+    agents:
+      queue: general-prod-dflt

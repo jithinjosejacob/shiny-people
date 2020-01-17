@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="hide-payslip;hide-payslip" tests="3" failures="0" skipped="0">
+        <properties>
+            <property name="URI" value="C:/Users/ADMIN/Desktop/MYOB-QA CHALLENGE/shiny-people/payroll/app/test/features/hide_payslip.feature">
+            </property>
+        </properties>
+        <testcase name="When I generate a payslip for a new employee" classname="hide-payslip;hide-payslip" time="33.5350452">
+        </testcase>
+        <testcase name="And I press Hide" classname="hide-payslip;hide-payslip" time="1.3855425">
+        </testcase>
+        <testcase name="Then I should not see the payslip table" classname="hide-payslip;hide-payslip" time="0.0758724">
+        </testcase>
+    </testsuite>
+    <testsuite name="initiate-payment;initiate-payment" tests="3" failures="0" skipped="0">
+        <properties>
+            <property name="URI" value="C:/Users/ADMIN/Desktop/MYOB-QA CHALLENGE/shiny-people/payroll/app/test/features/initiate_payment.feature">
+            </property>
+        </properties>
+        <testcase name="When I generate a payslip for a new employee" classname="initiate-payment;initiate-payment" time="25.9621788">
+        </testcase>
+        <testcase name="And I press Pay" classname="initiate-payment;initiate-payment" time="0.0963047">
+        </testcase>
+        <testcase name="Then I should see payee data added to payment table" classname="initiate-payment;initiate-payment" time="0.1315999">
+        </testcase>
+    </testsuite>
+    <testsuite name="payroll-system-payslips;generate-payslip-for-a-new-employee" tests="2" failures="0" skipped="0">
+        <properties>
+            <property name="URI" value="C:/Users/ADMIN/Desktop/MYOB-QA CHALLENGE/shiny-people/payroll/app/test/features/payslip.feature">
+            </property>
+        </properties>
+        <testcase name="When I generate a payslip for a new employee" classname="payroll-system-payslips;generate-payslip-for-a-new-employee" time="22.9007346">
+        </testcase>
+        <testcase name="Then I should see the payslip summary page" classname="payroll-system-payslips;generate-payslip-for-a-new-employee" time="0.4829005">
+        </testcase>
+    </testsuite>
+</testsuites>
